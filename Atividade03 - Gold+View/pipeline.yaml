@@ -1,0 +1,33 @@
+resources:
+  jobs:
+    pipeline_medalhao:
+      name: pipeline_medalhao
+      schedule:
+        quartz_cron_expression: 6 0 13 * * ?
+        timezone_id: America/Sao_Paulo
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: extracao_bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/lgscss@cin.ufpe.br/land_to_bronze
+            source: WORKSPACE
+        - task_key: conversao_silver
+          depends_on:
+            - task_key: extracao_bronze
+          notebook_task:
+            notebook_path: /Workspace/Users/lgscss@cin.ufpe.br/bronze_to_silver
+            source: WORKSPACE
+          environment_key: conversao_silver_environment
+        - task_key: transformacao_gold
+          depends_on:
+            - task_key: conversao_silver
+          notebook_task:
+            notebook_path: /Workspace/Users/lgscss@cin.ufpe.br/silver_to_gold
+            source: WORKSPACE
+      queue:
+        enabled: true
+      environments:
+        - environment_key: conversao_silver_environment
+          spec:
+            environment_version: "4"
+      performance_target: PERFORMANCE_OPTIMIZED
